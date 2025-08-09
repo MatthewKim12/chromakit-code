@@ -1,1 +1,1 @@
-this is codes for chromakit module
+these are codes for chromakit module
