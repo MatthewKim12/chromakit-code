@@ -30,16 +30,23 @@ class Color:
         else:
             self.h, self.s, self.l = color
         self.format = color_format
+
     def __str__(self):
-        return ", ".join(self.__dict__.values()[:-2])
+        if self.format == "rgb":
+            return f"rgb({self.r}, {self.g}, {self.b})"
+        elif self.format == "rgba":
+            return f"rgba({self.r}, {self.g}, {self.b}, {self.alpha})"
+        elif self.format == "hsl":
+            return f"hsl({self.h}, {self.s}, {self.l})"
+
     def __repr__(self):
-        return f"<color object with {self}>"
+        return f"<Color {self}>"
+
     def _hsl_to_rgb_values(self):
         c = (1 - abs(2 * self.l - 1)) * self.s
         h_prime = self.h / 60
         x = c * (1 - abs(h_prime % 2 - 1))
         m = self.l - c / 2
-        r1 = g1 = b1 = 0
         if 0 <= self.h < 60:
             r1, g1, b1 = c, x, 0
         elif 60 <= self.h < 120:
@@ -56,12 +63,13 @@ class Color:
         g = _floor((g1 + m) * 255)
         b = _floor((b1 + m) * 255)
         return r, g, b
-    def to_rgb(self, *, inplace=False, **kw):
+
+    def to_rgb(self, *, inplace: bool = False, **kw):
         if self.format == "rgb":
             return self if not inplace else None
         elif self.format == "rgba":
             if inplace:
-                self.alpha = None
+                del self.alpha
                 self.format = "rgb"
             else:
                 return Color((self.r, self.g, self.b), "rgb")
@@ -70,12 +78,11 @@ class Color:
             if inplace:
                 self.r, self.g, self.b = r, g, b
                 self.format = "rgb"
-                delattr(self, "h")
-                delattr(self, "s")
-                delattr(self, "l")
+                del self.h, self.s, self.l
             else:
                 return Color((r, g, b), "rgb")
-    def to_rgba(self, *, inplace=False, **kw):
+
+    def to_rgba(self, *, inplace: bool = False, **kw):
         if self.format == "rgba":
             return self if not inplace else None
         elif self.format == "rgb":
@@ -89,47 +96,39 @@ class Color:
             if inplace:
                 self.r, self.g, self.b, self.alpha = r, g, b, 1.0
                 self.format = "rgba"
-                delattr(self, "h")
-                delattr(self, "s")
-                delattr(self, "l")
+                del self.h, self.s, self.l
             else:
                 return Color((r, g, b, 1.0), "rgba")
-    def to_hsl(self, *, inplace=False: bool, **kw):
+
+    def to_hsl(self, *, inplace: bool = False, **kw):
         if self.format == "hsl":
-            if not inplace:
-                return self
-            else:
-                return None
+            return self if not inplace else None
         r1 = self.r / 255
         g1 = self.g / 255
         b1 = self.b / 255
-        cmax = max([r1, g1, b1])
-        cmin = min([r1, g1, b1])
+        cmax = max(r1, g1, b1)
+        cmin = min(r1, g1, b1)
         delta = cmax - cmin
-        h = 60
-        s = 0
-        l = 0
+
         if delta == 0:
-            h *= 0
+            h = 0
         elif cmax == r1:
-            h *= _floor(((g1 - b1) / delta) % 6)
+            h = (g1 - b1) / delta % 6
         elif cmax == g1:
-            h *= _floor((b1 - r1) / delta + 2)
-        elif cmax == b1:
-            h *= _floor((r1 - g1) / delta + 4)
+            h = (b1 - r1) / delta + 2
+        else:
+            h = (r1 - g1) / delta + 4
+        h *= 60
+
         l = (cmax + cmin) / 2
-        try:
-            s = delta / (1 - _floor(2 * l - 1))
-        except ZeroDivisionError:
-            s = 0
+        s = 0 if delta == 0 else delta / (1 - abs(2 * l - 1))
+
         if inplace:
-            self.h = h
-            self.s = s
-            self.l = l
-            delattr(self, "r")
-            delattr(self, "g")
-            delattr(self, "b")
+            self.h, self.s, self.l = h, s, l
+            del self.r, self.g, self.b
             if self.format == "rgba":
-                delattr(self, "alpha")
+                del self.alpha
+            self.format = "hsl"
         else:
             return Color((h, s, l), "hsl")
+
