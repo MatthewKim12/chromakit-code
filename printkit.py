@@ -1,6 +1,7 @@
 from typing import Literal
 from .base import Color
 from tkinter import Tk
+from colorama import init
 
 def rgb_to_hex(r: int, g: int, b: int) -> str:
     return f"#{r:02x}{g:02x}{b:02x}"
@@ -13,6 +14,7 @@ def color_text(
     allowed_formats: list = ["rgb", "rgba", "hsl"],
     **kw
 ):
+    init()
     for fmt in allowed_formats:
         if fmt not in ["rgb", "rgba", "hsl"]:
             raise ValueError(f"wrong format '{fmt}'")
@@ -50,4 +52,5 @@ def display(
         root.mainloop()
     elif color.format == "hsl":
         display(color.to_rgb())
+
 
