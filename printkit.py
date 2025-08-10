@@ -10,25 +10,22 @@ def color_text(
     color: Color,
     *,
     mode: Literal["text", "print"] = "text",
-    allowed_formats: list[str] = ["rgb", "rgba", "hsl"],
+    allowed_formats: list = ["rgb", "rgba", "hsl"],
     **kw
 ):
-    # Validate allowed formats
     for fmt in allowed_formats:
         if fmt not in ["rgb", "rgba", "hsl"]:
             raise ValueError(f"wrong format '{fmt}'")
     if color.format not in allowed_formats:
         raise ValueError(f"wrong format '{color.format}'")
 
-    rgb_color = color.to_rgb()
-    r, g, b = rgb_color.r, rgb_color.g, rgb_color.b
-    gentext = f"\033[38;2;{r};{g};{b}m{text}\033[0m"
+    rgb = color.to_rgb()
+    gentext = f"\033[38;2;{rgb.r};{rgb.g};{rgb.b}m{text}\033[0m"
 
     if mode == "text":
         return gentext
     elif mode == "print":
         print(gentext)
-
 def display(
     color: Color,
     *,
@@ -53,3 +50,4 @@ def display(
         root.mainloop()
     elif color.format == "hsl":
         display(color.to_rgb())
+
